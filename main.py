@@ -14,8 +14,6 @@ from TOKEN import TOKEN
 
 # TOKEN = 'your token'
 
-# TOKEN = '6656395173:AAHcuCD3LPS2hLR_Q1RFG_tFXevJxLKl1Fs'
-
 
 bot = telebot.TeleBot(TOKEN)
 
