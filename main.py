@@ -2,20 +2,30 @@ import telebot
 from PIL import Image
 import io
 from telebot import types
-import os
-
-TOKEN = os.getenv('TOKEN')
-
+# import os
+#
+# TOKEN = os.getenv('TOKEN')
 
 # TOKEN = 'your token'
+
+TOKEN = '6656395173:AAHcuCD3LPS2hLR_Q1RFG_tFXevJxLKl1Fs'
+
+
 bot = telebot.TeleBot(TOKEN)
 
 user_states = {}  # тут будем хранить информацию о действиях пользователя
 
 # набор символов из которых составляем изображение
-ASCII_CHARS_default = '@%#*+=-:. '
+# ASCII_CHARS_default = '@%#*+=-:. '
 
-# print(user_states[call.message.chat.id])
+ASCII_CHARS_own = None
+if ASCII_CHARS_own is True:
+    ASCII_CHARS_default = ASCII_CHARS_own
+else:
+    ASCII_CHARS_default = '@%#*+=-:. '
+
+print(user_states)
+# print(user_states[message.chat.id])
 # if 'new_character_set' in dict.keys(user_states[id]):
 #     ASCII_CHARS_default = user_states[id]['new_character_set']
 
@@ -159,10 +169,14 @@ def ascii_users_character_set(message):
     # print(dict.items(user_states[message.chat.id]))
     # print(dict.keys(user_states[message.chat.id]))
     # user_states[message.chat.id]['new_character_set']
-    ASCII_CHARS_OWN
+    
+    print(user_states) # ---> {298101149: {'photo': 'AgACAgIAAxkBAAIBZmZcO0oc-729DYLpVPOeZJQlWG0qAAJ53TEbOBzhSj6ORho-NvcfAQADAgADeQADNQQ', 'new_character_set': 'asdfghjk'}}
+    
+    
+    ASCII_CHARS_own = user_states[message.chat.id]['new_character_set']
 
     ascii_and_send_standart(message)
-
+    return ASCII_CHARS_own
 
 
 
