@@ -89,7 +89,8 @@ def pixelate_image(image, pixel_size):
 def send_welcome(message):
     bot.reply_to(message, "Send me an image, and I'll provide options for you!\n"
                           "Also I can make you laugh, just send me - 'JOKE'.\n"
-                          "If you are upset, I can give you a compliment. Send me 'Compliment' to get it")
+                          "If you are upset, I can give you a compliment. Send me 'COMPLIMENT' to get it.\n"
+                          "...Why don't we flip a coin? Just send - 'FLIP")
 
 
 @bot.message_handler(content_types=['photo'])  # 2. Принимает фото от пользователя
@@ -144,6 +145,10 @@ def ascii_users_choise(message):
                        'Какая ты теперь умница и красотка, со мной ты стала нормальной, не то что раньше']
         random_compliment = random.choice(COMPLIMENTS)
         bot.send_message(message.chat.id, text=random_compliment)
+    elif users_character.lower() == 'flip':
+        results_of_flip = ["Heads", "Tails"]
+        random_side_coin = random.choice(results_of_flip)
+        bot.send_message(message.chat.id, text=random_side_coin)
     else:
         bot.send_message(message.chat.id,
                          "Sorry, I cannot handle such kinda message. ENTER /help to see what functions i have")
