@@ -3,7 +3,7 @@ TOKEN is stored in a separate file "TOKEN.py"
 '''
 
 import telebot
-from PIL import Image
+from PIL import Image, ImageOps
 import io
 from telebot import types
 from TOKEN import TOKEN
@@ -131,8 +131,9 @@ def get_options_keyboard():
     """
     keyboard = types.InlineKeyboardMarkup() # здесь создаем меню для размещения кнопок, по умолчанию - три в ряд.
     pixelate_btn = types.InlineKeyboardButton("Pixelate", callback_data="pixelate") # здесь создаём кнопку
-    ascii_btn = types.InlineKeyboardButton("ASCII Art (standart)", callback_data="ascii") # здесь создаём еще одну кнопку
-    keyboard.add(pixelate_btn, ascii_btn)
+    ascii_btn = types.InlineKeyboardButton("ASCII Art", callback_data="ascii") # здесь создаём еще одну кнопку
+    color_inversion_bttn = types.InlineKeyboardButton("Inversion of Color", callback_data="inversion")
+    keyboard.add(pixelate_btn, ascii_btn, color_inversion_bttn)
     return keyboard
 
 @bot.callback_query_handler(func=lambda call: True)
@@ -152,6 +153,9 @@ def callback_query(call):
                                   "and then send me your own character set in next message. "
                                   "If you don't want to change default character set, send me 'default'.")
         bot.register_next_step_handler(call.message, ascii_users_choise)
+    elif call.data == "inversion":
+        bot.answer_callback_query(call.id, "I'm inverting your image...")
+        inverting_and_send(call.message)
 
 
 def pixelate_and_send(message):
@@ -178,6 +182,20 @@ def ascii_and_send_standart(message, users_character=None):
                                                 # или переводим фото в какой-то поток информации байтовый?
     ascii_art = image_to_ascii(image_stream, users_character=users_character)
     bot.send_message(message.chat.id, f"```\n{ascii_art}\n```", parse_mode="MarkdownV2")
+
+def inverting_and_send(message):
+    photo_id = user_states[message.chat.id]['photo']
+    file_info = bot.get_file(photo_id)
+    downloaded_file = bot.download_file(file_info.file_path)
+
+    image_stream = io.BytesIO(downloaded_file)
+    image = Image.open(image_stream)
+
+    inverted = ImageOps.invert(image)
+    output_stream = io.BytesIO()
+    inverted.save(output_stream, format="JPEG")
+    output_stream.seek(0)
+    bot.send_photo(message.chat.id, output_stream)
 
 
 
