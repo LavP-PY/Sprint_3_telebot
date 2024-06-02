@@ -6,6 +6,7 @@ import telebot
 from PIL import Image, ImageOps
 import io
 from telebot import types
+import random
 from TOKEN import TOKEN
 
 # import os
@@ -86,7 +87,7 @@ def pixelate_image(image, pixel_size):
 
 @bot.message_handler(commands=['start', 'help'])  # 1. /start /help и прочие параметры меню
 def send_welcome(message):
-    bot.reply_to(message, "Send me an image, and I'll provide options for you!")
+    bot.reply_to(message, "Send me an image, and I'll provide options for you! Also I can make you laugh, just send me - JOKE")
 
 
 @bot.message_handler(content_types=['photo'])  # 2. Принимает фото от пользователя
@@ -116,6 +117,18 @@ def ascii_users_choise(message):
         else:
             bot.send_message(message.chat.id, 'Please send your personal character set')
             bot.register_next_step_handler(message, ascii_users_character_set)
+    elif users_character.lower() == 'joke':
+        JOKES = ['Плохо написанное  ПО одного  — кропотливая  работа другого',
+                 'Если девушка попросила  вас починить компьютер не нужно  радоваться, возможно там и нечего чинить',
+                 'Код писать надо так , словно человек, который будет его поддерживать  — психопат, который знает, где ты живешь',
+                 'Не получилось написать хорошую программу с первого раза , тогда назовите ее “первой версией”',
+                 'Есть два основных языка программирования: одним – все недовольны, а  другими никто не пользовался',
+                 'Если в очередном обновлении  Java будет создана  функция очищения  программного мусора, основная часть приложений Java будут удалять себя сразу после установки',
+                 'Нету плохого когда, есть тот, который неправильно поняли',
+                 'Прежде чем удалить файл, посмотри — твой ли он. Надежные компоненты те, которых нету',
+                 'Хотел задать вопрос – It это ориентация или все же диагноз?']
+        random_joke = random.choice(JOKES)
+        bot.send_message(message.chat.id, text=random_joke)
     else:
         bot.send_message(message.chat.id,
                          "Sorry, I cannot handle such kinda message. ENTER /help to see what functions i have")
@@ -175,6 +188,7 @@ def callback_query(call):
         elif call.data == "resize":
             bot.answer_callback_query(call.id, "I'm changing sizes of your image to stickers size...")
         many_func_handler_of_image(call.message, calldata=call.data)
+
     # elif call.data == "inversion":
     #     bot.answer_callback_query(call.id, "I'm inverting your image...")
     #     inverting_and_send(call.message)
