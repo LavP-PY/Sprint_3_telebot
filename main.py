@@ -142,7 +142,8 @@ def get_options_keyboard():
     mirror_vert_btn = types.InlineKeyboardButton("Mirror vertically", callback_data="mirror_vert")
     mirror_horiz_btn = types.InlineKeyboardButton("Mirror horizontally", callback_data="mirror_horiz")
     build_heat_map_btn = types.InlineKeyboardButton("Build heat map", callback_data="heat_map")
-    keyboard.add(pixelate_btn, ascii_btn, color_inversion_btn, mirror_vert_btn, mirror_horiz_btn, build_heat_map_btn)
+    resize_btn = types.InlineKeyboardButton("Resize to sticker", callback_data="resize")
+    keyboard.add(pixelate_btn, ascii_btn, color_inversion_btn, mirror_vert_btn, mirror_horiz_btn, build_heat_map_btn, resize_btn)
     return keyboard
 
 
@@ -153,7 +154,7 @@ def callback_query(call):
     :param call:
     :return:
     """
-    call_data_list = ["inversion", "mirror_vert", "mirror_horiz", "heat_map"]
+    call_data_list = ["inversion", "mirror_vert", "mirror_horiz", "heat_map", "resize"]
     if call.data == "pixelate":
         bot.answer_callback_query(call.id, "Pixelating your image...")
         pixelate_and_send(call.message)
@@ -173,7 +174,8 @@ def callback_query(call):
             bot.answer_callback_query(call.id, "I'm mirroring horizontally your image...")
         elif call.data == "heat_map":
             bot.answer_callback_query(call.id, "I'm building a heat map for your image...")
-
+        elif call.data == "resize":
+            bot.answer_callback_query(call.id, "I'm changing sizes of your image to stickers size...")
         many_func_handler_of_image(call.message, calldata=call.data)
     # elif call.data == "inversion":
     #     bot.answer_callback_query(call.id, "I'm inverting your image...")
@@ -227,8 +229,23 @@ def many_func_handler_of_image(message, calldata=None):
     elif calldata == "mirror_horiz":
         processed_image = image.transpose(Image.FLIP_TOP_BOTTOM)
     elif calldata == "heat_map":
-        image = image.convert('L')
+        image = grayify(image)
         processed_image = ImageOps.colorize(image, black ="blue", white ="red")
+    elif calldata == "resize":
+        large_size = 512
+        width, height = image.size
+        if height > width:
+            ratio = height / width
+            new_height = large_size
+            new_width = int(large_size / ratio)
+        elif width > height:
+            ratio = width / height
+            new_width = large_size
+            new_height = int(large_size / ratio)
+        else:
+            new_height = large_size
+            new_width = large_size
+        processed_image = image.resize((new_width, new_height))
     output_stream = io.BytesIO()
     processed_image.save(output_stream, format="JPEG")
     output_stream.seek(0)
