@@ -141,7 +141,8 @@ def get_options_keyboard():
     color_inversion_btn = types.InlineKeyboardButton("Inversion of Color", callback_data="inversion")
     mirror_vert_btn = types.InlineKeyboardButton("Mirror vertically", callback_data="mirror_vert")
     mirror_horiz_btn = types.InlineKeyboardButton("Mirror horizontally", callback_data="mirror_horiz")
-    keyboard.add(pixelate_btn, ascii_btn, color_inversion_btn, mirror_vert_btn, mirror_horiz_btn)
+    build_heat_map_btn = types.InlineKeyboardButton("Build heat map", callback_data="heat_map")
+    keyboard.add(pixelate_btn, ascii_btn, color_inversion_btn, mirror_vert_btn, mirror_horiz_btn, build_heat_map_btn)
     return keyboard
 
 
@@ -152,7 +153,7 @@ def callback_query(call):
     :param call:
     :return:
     """
-    call_data_list = ["inversion", "mirror_vert", "mirror_horiz"]
+    call_data_list = ["inversion", "mirror_vert", "mirror_horiz", "heat_map"]
     if call.data == "pixelate":
         bot.answer_callback_query(call.id, "Pixelating your image...")
         pixelate_and_send(call.message)
@@ -170,6 +171,9 @@ def callback_query(call):
             bot.answer_callback_query(call.id, "I'm mirroring vertically your image...")
         elif call.data == "mirror_horiz":
             bot.answer_callback_query(call.id, "I'm mirroring horizontally your image...")
+        elif call.data == "heat_map":
+            bot.answer_callback_query(call.id, "I'm building a heat map for your image...")
+
         many_func_handler_of_image(call.message, calldata=call.data)
     # elif call.data == "inversion":
     #     bot.answer_callback_query(call.id, "I'm inverting your image...")
@@ -222,6 +226,9 @@ def many_func_handler_of_image(message, calldata=None):
         processed_image = image.transpose(Image.FLIP_LEFT_RIGHT)
     elif calldata == "mirror_horiz":
         processed_image = image.transpose(Image.FLIP_TOP_BOTTOM)
+    elif calldata == "heat_map":
+        image = image.convert('L')
+        processed_image = ImageOps.colorize(image, black ="blue", white ="red")
     output_stream = io.BytesIO()
     processed_image.save(output_stream, format="JPEG")
     output_stream.seek(0)
