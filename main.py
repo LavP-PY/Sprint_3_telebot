@@ -1,14 +1,21 @@
+'''
+TOKEN is stored in a separate file "TOKEN.py"
+'''
+
 import telebot
 from PIL import Image
 import io
 from telebot import types
+from TOKEN import TOKEN
+
+
 # import os
 #
 # TOKEN = os.getenv('TOKEN')
 
 # TOKEN = 'your token'
 
-TOKEN = '6656395173:AAHcuCD3LPS2hLR_Q1RFG_tFXevJxLKl1Fs'
+# TOKEN = '6656395173:AAHcuCD3LPS2hLR_Q1RFG_tFXevJxLKl1Fs'
 
 
 bot = telebot.TeleBot(TOKEN)
@@ -16,20 +23,7 @@ bot = telebot.TeleBot(TOKEN)
 user_states = {}  # тут будем хранить информацию о действиях пользователя
 
 # набор символов из которых составляем изображение
-# ASCII_CHARS_default = '@%#*+=-:. '
-
-ASCII_CHARS_own = None
-if ASCII_CHARS_own is True:
-    ASCII_CHARS_default = ASCII_CHARS_own
-else:
-    ASCII_CHARS_default = '@%#*+=-:. '
-
-print(user_states)
-# print(user_states[message.chat.id])
-# if 'new_character_set' in dict.keys(user_states[id]):
-#     ASCII_CHARS_default = user_states[id]['new_character_set']
-
-# ASCII_CHARS_OWN = user_states[]
+ASCII_CHARS_default = '@%#*+=-:. '
 
 def resize_image(image, new_width=100):
     width, height = image.size
@@ -40,7 +34,7 @@ def resize_image(image, new_width=100):
 def grayify(image):
     return image.convert("L")
 
-def image_to_ascii(image_stream, new_width=40):
+def image_to_ascii(image_stream, new_width=40, users_character=None):
     # Переводим в оттенки серого
     image = Image.open(image_stream).convert('L') # конвертим изображение в 8-битовые пиксели ч/б
 
@@ -51,7 +45,7 @@ def image_to_ascii(image_stream, new_width=40):
         aspect_ratio * new_width * 0.48)  # 0,55 так как буквы выше чем шире !!! Здесь тоже не понятно, почему не 0,5, или не 0,6
     img_resized = image.resize((new_width, new_height))
 
-    img_str = pixels_to_ascii(img_resized)
+    img_str = pixels_to_ascii(img_resized, users_character=users_character)
     img_width = img_resized.width
 
 
@@ -64,7 +58,11 @@ def image_to_ascii(image_stream, new_width=40):
 
     return ascii_art
 
-def pixels_to_ascii(image):
+def pixels_to_ascii(image, users_character=None):
+    global ASCII_CHARS_default
+    if users_character is not None:
+        ASCII_CHARS_default = users_character
+
     pixels = image.getdata()
     characters = ""
     for pixel in pixels:
@@ -96,18 +94,34 @@ def handle_photo(message):
                  reply_markup=get_options_keyboard())                  # и создает выполняет команду по созданию кнопок
     user_states[message.chat.id] = {'photo': message.photo[-1].file_id} # ЗДЕСЬ ПРОИСХОДИТ ЧТО-ТО НЕ ПОНЯТНОЕ
 
-# @bot.message_handler(content_types='text')
-# def message_reply(message):
-#     """
-#     Функция обработки ТЕКСТОВЫХ сообщений от пользователя
-#     :param message: (str) Сообщение от пользователя в виде строки
-#     :return:
-#     """
-#     if "символ" in message.text.lower():
-#         bot.send_message(message.chat.id,"Please, enter your own character set")
-#     else:
-#         bot.send_message(message.chat.id, "Sorry, I cannot handle such kinda message. ENTER /help to see what functions i have")
+@bot.message_handler(content_types='text')
+def ascii_users_choise(message):
+    users_character = message.text
+    if not user_states:
+        user_states[message.chat.id] = {'users_character': users_character}
+    else:
+        user_states[message.chat.id]['users_character']=users_character
 
+    if users_character.lower() == 'default':
+        if 'photo' not in dict.keys(user_states[message.chat.id]):
+            bot.send_message(message.chat.id, 'At first send me a pic/photo for processing')
+        else:
+            bot.send_message(message.chat.id, "Converting your image to ASCII art...")
+            ascii_and_send_standart(message)
+    elif users_character.lower() == 'new symbols':
+        if 'photo' not in dict.keys(user_states[message.chat.id]):
+            bot.send_message(message.chat.id, 'At first send me a pic/photo for processing')
+        else:
+            bot.send_message(message.chat.id, 'Please send your personal character set')
+            bot.register_next_step_handler(message, ascii_users_character_set)
+    else:
+        bot.send_message(message.chat.id, "Sorry, I cannot handle such kinda message. ENTER /help to see what functions i have")
+
+def ascii_users_character_set(message):
+    users_character = message.text
+    user_states[message.chat.id]['new_character_set'] = users_character
+    bot.send_message(message.chat.id, "Converting your image to ASCII art...")
+    ascii_and_send_standart(message, users_character=users_character)
 
 
 def get_options_keyboard():
@@ -137,47 +151,7 @@ def callback_query(call):
                                   "if you want to change its, just send 'new symbols' by first message, "
                                   "and then send me your own character set in next message. "
                                   "If you don't want to change default character set, send me 'default'.")
-        # user_states[call.message.chat.id] = {'photo': call.message.photo[-1], 'state': 'new_character_set'}
         bot.register_next_step_handler(call.message, ascii_users_choise)
-
-# @bot.message_handler(func=lambda message: user_states.get(message.chat.id, {}).get('state') == 'new_character_set')
-# def handle_new_character_set(message):
-#     new_character_set = message.text.strip()
-#     user_states[message.chat.id]['new_character_set'] = new_character_set
-#     # bot.reply_to(message, "Got it! Please choose what you would like to do with image", reply_markup=get_options_keyboard())
-#     user_states[message.chat.id]['state'] = 'ready'
-
-def ascii_users_choise(message):
-    users_character = message.text
-    if users_character.lower() == 'default':
-        users_character = ASCII_CHARS_default
-        bot.send_message(message.chat.id, "Converting your image to ASCII art...")
-        ascii_and_send_standart(message)
-    elif users_character.lower() == 'new symbols':
-        bot.send_message(message.chat.id, 'Введите свой набор символов')
-        bot.register_next_step_handler(message, ascii_users_character_set)
-
-
-@bot.message_handler(content_types='text')
-def ascii_users_character_set(message):
-    users_character = message.text
-    # ASCII_CHARS_default = users_character
-
-    user_states[message.chat.id]['new_character_set'] = users_character
-
-    bot.send_message(message.chat.id, "Converting your image to ASCII art...")
-    # print(dict.items(user_states[message.chat.id]))
-    # print(dict.keys(user_states[message.chat.id]))
-    # user_states[message.chat.id]['new_character_set']
-    
-    print(user_states) # ---> {298101149: {'photo': 'AgACAgIAAxkBAAIBZmZcO0oc-729DYLpVPOeZJQlWG0qAAJ53TEbOBzhSj6ORho-NvcfAQADAgADeQADNQQ', 'new_character_set': 'asdfghjk'}}
-    
-    
-    ASCII_CHARS_own = user_states[message.chat.id]['new_character_set']
-
-    ascii_and_send_standart(message)
-    return ASCII_CHARS_own
-
 
 
 def pixelate_and_send(message):
@@ -195,14 +169,14 @@ def pixelate_and_send(message):
     bot.send_photo(message.chat.id, output_stream)
 
 
-def ascii_and_send_standart(message):
+def ascii_and_send_standart(message, users_character=None):
     photo_id = user_states[message.chat.id]['photo']
     file_info = bot.get_file(photo_id)
     downloaded_file = bot.download_file(file_info.file_path) # не совсем понимаю что желает этот метод .file_path
 
     image_stream = io.BytesIO(downloaded_file)  # что значит необработанные данные? Мы получили фото, но пайтон еще не понимает, что это фото?
                                                 # или переводим фото в какой-то поток информации байтовый?
-    ascii_art = image_to_ascii(image_stream)
+    ascii_art = image_to_ascii(image_stream, users_character=users_character)
     bot.send_message(message.chat.id, f"```\n{ascii_art}\n```", parse_mode="MarkdownV2")
 
 
