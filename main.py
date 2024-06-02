@@ -87,7 +87,9 @@ def pixelate_image(image, pixel_size):
 
 @bot.message_handler(commands=['start', 'help'])  # 1. /start /help и прочие параметры меню
 def send_welcome(message):
-    bot.reply_to(message, "Send me an image, and I'll provide options for you! Also I can make you laugh, just send me - JOKE")
+    bot.reply_to(message, "Send me an image, and I'll provide options for you!\n"
+                          "Also I can make you laugh, just send me - 'JOKE'.\n"
+                          "If you are upset, I can give you a compliment. Send me 'Compliment' to get it")
 
 
 @bot.message_handler(content_types=['photo'])  # 2. Принимает фото от пользователя
@@ -129,6 +131,19 @@ def ascii_users_choise(message):
                  'Хотел задать вопрос – It это ориентация или все же диагноз?']
         random_joke = random.choice(JOKES)
         bot.send_message(message.chat.id, text=random_joke)
+    elif users_character.lower() == 'compliment':
+        COMPLIMENTS = ['Какие у вашей собаки губки, глаза и шерсть красивые. Прямо как у вас!',
+                       'У вас ноги как бильярдный кий',
+                       'Ты у меня быстрее, чем вода в унитазе!',
+                       'У тебя очень красивые губы. Где тебе их сделали?',
+                       'У вас череп такой правильной формы. Вы не хотите побриться налысо?',
+                       'А может, вы не девушка? Память у вас не девичья…',
+                       'Твоя харизма может рассмешить даже серьезного клоуна',
+                       'С тобой каждый день как смешной комедийный шоу',
+                       'Ты всегда находишь выход из любой ситуации! Это не потому что вход в неё ты сам показал?',
+                       'Какая ты теперь умница и красотка, со мной ты стала нормальной, не то что раньше']
+        random_compliment = random.choice(COMPLIMENTS)
+        bot.send_message(message.chat.id, text=random_compliment)
     else:
         bot.send_message(message.chat.id,
                          "Sorry, I cannot handle such kinda message. ENTER /help to see what functions i have")
